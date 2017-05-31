@@ -1,7 +1,7 @@
 const firebase = require('firebase');
 const db = firebase.database();
 const TestModel = require('../model/test');
-const ResultModel = require('../model/result');
+const CandidateModel = require('../model/candidate');
 
 exports.findAll = function (callback){
 	var ref = db.ref("tests");
@@ -19,7 +19,13 @@ exports.findAll = function (callback){
 exports.findById = function (testId,callback){
 	var ref = db.ref("tests/"+testId);
 	ref.once("value", function(snapshot) {
-	  callback(new TestModel(snapshot.val()));
+		var testModel = new TestModel(snapshot.val());
+		if(testModel.id){
+			callback(testModel);
+		}else {
+			callback(null);
+		}
+
 	});
 }
 
@@ -31,71 +37,84 @@ exports.insert = function (testRequestDTO,callback){
 	var updates = {};
   updates['/tests/' + newTestKey] = newTestModel;
 	db.ref().update(updates);
-	this.findById(newTestKey,function(testModel){
-		callback(testModel);
-	});
+	this.findById(newTestKey,callback);
 }
 
 exports.update = function (testRequestDTO,callback){
 	var id = testRequestDTO.id;
 	var ref = db.ref("tests/"+id);
-	var testModel = null;
-	if(ref){
-		testModel = new TestModel(testRequestDTO);
-		var updates = {};
-	  updates['/tests/' + id] = testModel;
-		db.ref().update(updates);
-	}
-	callback(testModel);
+	this.findById(id,function(testModel){
+		if(testModel){
+			testModel = new TestModel(testRequestDTO);
+			var updates = {};
+			updates['/tests/' + id] = testModel;
+			db.ref().update(updates);
+		}
+		callback(testModel);
+	});
 }
 
-exports.delete = function (testId){
+exports.delete = function (testId,callback){
 	var ref = db.ref("tests/"+testId);
-	if(ref){
-		var updates = {};
-	  updates['/tests/' + testId] = null;
-		db.ref().update(updates);
-	}
+	this.findById(testId,function(testModel){
+		if(testModel){
+			var updates = {};
+		  updates['/tests/' + testId] = null;
+			db.ref().update(updates);
+		}
+		callback(testModel);
+	});
 }
 
 exports.execute = function (testId,callback){
-	var result=null;
+	var candidateSelected=null;
+	var testModel = null;
 	var testRef = db.ref("tests/"+testId);
 	if(testRef){
 		testRef.once("value", function(snapshotTest) {
 			try {
 				var testSelectedRequests = 0;
-				var candidateSelected = null;
 				var candidateRequestsMinor = null;
-				var testModel = new TestModel(snapshotTest.val());
+				testModel = new TestModel(snapshotTest.val());
+				var testRequests = testModel.requests!=undefined?testModel.requests:0;
 				var now = new Date();
 				if(testModel.active && now >= new Date(testModel.startDate) && now <= new Date(testModel.endDate)){
 					Object.keys(testModel.candidates).forEach(function(key,index) {
 						var candidateModel = testModel.candidates[key];
-						var candidateRequests = candidateModel.requests;
+						var candidateRequests = candidateModel.requests!=undefined?candidateModel.requests:0;
 						testSelectedRequests += candidateRequests;
 						if(candidateRequestsMinor===null || candidateRequests<candidateRequestsMinor){
 							candidateSelected = candidateModel;
-							candidateRequestsMinor = candidateModel.requests;
+							candidateRequestsMinor = candidateRequests;
 						}
 					});
-					var percentSelectedRequests = (testSelectedRequests/testModel.requests);
+					var percentSelectedRequests = (testSelectedRequests/testRequests);
+					percentSelectedRequests = isNaN(percentSelectedRequests)?0:percentSelectedRequests;
 					var candidateRef = null;
 					if(percentSelectedRequests<testModel.samplePercent){
-						result = candidateSelected;
 						candidateRef = db.ref("tests/"+testModel.id+"/candidates/"+candidateSelected.id);
+					}else{
+						candidateSelected = null;
 					}
 					testRef.transaction(function(snapshotTest){
-						if(snapshotTest && snapshotTest.requests!=null){
-							snapshotTest.requests++;
+						if(snapshotTest){
+							if(snapshotTest.requests!=undefined){
+								snapshotTest.requests++;
+							}else{
+								snapshotTest.requests = 1;
+							}
 						}
 						return snapshotTest;
 					});
 					if(candidateRef){
 						candidateRef.transaction(function(snapshotCandidate){
-							if(snapshotCandidate && snapshotCandidate.requests!=null){
-								snapshotCandidate.requests++;
-								if(snapshotCandidate.converted==null){
+							if(snapshotCandidate){
+								if(snapshotCandidate.requests!=undefined){
+									snapshotCandidate.requests++;
+								}else{
+									snapshotCandidate.requests = 1;
+								}
+								if(snapshotCandidate.converted===undefined){
 									snapshotCandidate.converted = 0;
 								}
 								snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
@@ -104,21 +123,20 @@ exports.execute = function (testId,callback){
 						});
 					}
 				}
-			} catch (e) {
-				console.log(e);
-			} finally{
-				callback(result);
+			}finally {
+				callback(testModel,candidateSelected);
 			}
 		});
 	}else{
-		callback(null);
+		callback(testModel,candidateSelected);
 	}
 }
 
-exports.convert = function (testId,candidateId){
+exports.convert = function (testId,candidateId,callback){
 	var candidateRef = db.ref("tests/"+testId+"/candidates/"+candidateId);
 	if(candidateRef){
 		candidateRef.transaction(function(snapshotCandidate){
+			var candidateModel = new CandidateModel(snapshotCandidate);
 			if(snapshotCandidate){
 				if(snapshotCandidate.converted==null){
 					snapshotCandidate.converted = 0;
@@ -127,22 +145,11 @@ exports.convert = function (testId,candidateId){
 					snapshotCandidate.converted++;
 					snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
 				}
+				callback(candidateModel);
 			}
 			return snapshotCandidate;
 		});
-	}
-}
-
-exports.result = function (testId,callback){
-	var testRef = db.ref("tests/"+testId);
-	var resultModel = null;
-	if(testRef){
-		testRef.once("value",function(snapshotTest){
-			var testModel = new TestModel(snapshotTest.val());
-			resultModel = new ResultModel(testModel,null);
-			callback(resultModel);
-		});
 	}else{
-		callback(resultModel);
+		callback(null);
 	}
 }

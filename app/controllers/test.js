@@ -6,8 +6,6 @@ const TestResponse = require('../dto/testResponse');
 const ExecuteRequest = require('../dto/executeRequest');
 const ExecuteResponse = require('../dto/executeResponse');
 
-const ResultResponse = require('../dto/resultResponse');
-
 exports.findAll = function (req,res){
 	service.findAll(function(testModels) {
 		var testsResponse = [];
@@ -40,32 +38,47 @@ exports.update = function (req,res){
 	var testRequestDTO = new TestRequest(req.body);
 	testRequestDTO.id = testId;
 	service.update(testRequestDTO,function(testModel){
-		res.json(new TestResponse(testModel));
+		if(testModel){
+			res.json(new TestResponse(testModel));
+		}else{
+			res.sendStatus(404);
+		}
 	});
 }
 
 exports.delete = function (req,res){
-	service.delete(req.params.testId);
-	res.sendStatus(200);
+	service.delete(req.params.testId,function(testModel){
+		if(testModel){
+			res.sendStatus(200);
+		}else{
+			res.sendStatus(404);
+		};
+	});
 }
 
 exports.execute = function (req,res){
 	var testId = req.params.testId;
-	service.execute(testId,function(candidateModel){
-		res.json(new ExecuteResponse(testId,candidateModel));
+	service.execute(testId,function(testModel,candidateModel){
+		if(testModel){
+			if(candidateModel){
+				res.json(new ExecuteResponse(testModel.id,candidateModel));
+			}else{
+				res.sendStatus(200);
+			}
+		}else{
+			res.sendStatus(404);
+		}
 	});
 }
 
 exports.convert = function (req,res){
 	var testId = req.params.testId;
 	var candidateId = req.params.candidateId;
-	service.convert(testId,candidateId);
-	res.sendStatus(200);
-}
-
-exports.result = function (req,res){
-	var testId = req.params.testId;
-	service.result(testId,function(resultModel){
-		res.json(new ResultResponse(resultModel));
+	service.convert(testId,candidateId,function(candidateModel){
+		if(candidateModel){
+			res.sendStatus(200);
+		}else{
+			res.sendStatus(404);
+		}
 	});
 }

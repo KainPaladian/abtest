@@ -30,9 +30,4 @@ module.exports = function(router) {
     controller.convert(req,res);
   });
 
-  router.route('/:testId/result')
-  .get(function(req, res, next) {
-    controller.result(req,res);
-  });
-
 };
