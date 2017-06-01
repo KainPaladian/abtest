@@ -1,0 +1,9 @@
+{
+    "l":"./forever.log",
+    "o":"./out.log",
+    "e":"./err.log",
+    "a":true,
+    "w":true,
+    "script": "index.js",
+    "sourceDir": "./"
+}

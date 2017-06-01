@@ -74,11 +74,6 @@ exports.execute = function (req,res){
 exports.convert = function (req,res){
 	var testId = req.params.testId;
 	var candidateId = req.params.candidateId;
-	service.convert(testId,candidateId,function(candidateModel){
-		if(candidateModel){
-			res.sendStatus(200);
-		}else{
-			res.sendStatus(404);
-		}
-	});
+	service.convert(testId,candidateId);
+	res.sendStatus(200);
 }

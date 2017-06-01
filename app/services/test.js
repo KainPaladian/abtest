@@ -136,7 +136,6 @@ exports.convert = function (testId,candidateId,callback){
 	var candidateRef = db.ref("tests/"+testId+"/candidates/"+candidateId);
 	if(candidateRef){
 		candidateRef.transaction(function(snapshotCandidate){
-			var candidateModel = new CandidateModel(snapshotCandidate);
 			if(snapshotCandidate){
 				if(snapshotCandidate.converted==null){
 					snapshotCandidate.converted = 0;
@@ -145,9 +144,15 @@ exports.convert = function (testId,candidateId,callback){
 					snapshotCandidate.converted++;
 					snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
 				}
-				callback(candidateModel);
 			}
 			return snapshotCandidate;
+		},
+		function(error, committed, snapshotCandidate) {
+			if (error) {
+				console.log('Transaction failed abnormally!', error);
+			} else if (!committed) {
+				console.log('We aborted the transaction (because ada already exists).');
+			}
 		});
 	}else{
 		callback(null);
