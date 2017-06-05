@@ -5,7 +5,9 @@ var DATABASE_CONFIG = config.get('DATABASE_CONFIG');
 
 firebase.initializeApp({
   serviceAccount: DATABASE_CONFIG.SERVICE_ACCOUNT,
-  databaseURL: DATABASE_CONFIG.URL
+  databaseURL: DATABASE_CONFIG.URL,
+  loggingEnable: DATABASE_CONFIG.LOGGING_ENABLE,
+  persistenceEnabled: DATABASE_CONFIG.LOGGING_ENABLE
 });
 
 module.exports = function(cb) {
