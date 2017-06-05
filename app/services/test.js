@@ -1,5 +1,4 @@
-const firebase = require('firebase');
-const db = firebase.database();
+
 const TestModel = require('../model/test');
 const CandidateModel = require('../model/candidate');
 

@@ -1,13 +1,16 @@
-const firebase = require("firebase");
+var mongoose = require('mongoose');
 var config = require('nconf');
-
+var logger = require('winston');
 var DATABASE_CONFIG = config.get('DATABASE_CONFIG');
 
-firebase.initializeApp({
-  serviceAccount: DATABASE_CONFIG.SERVICE_ACCOUNT,
-  databaseURL: DATABASE_CONFIG.URL,
-  loggingEnable: DATABASE_CONFIG.LOGGING_ENABLE,
-  persistenceEnabled: DATABASE_CONFIG.LOGGING_ENABLE
+mongoose.connect(DATABASE_CONFIG.MONGO_URI,DATABASE_CONFIG.MONGO_DB_OPTIONS);
+
+var db = mongoose.connection;
+db.on('error', function(){
+	logger.error('connection error');
+});
+db.once('open', function() {
+  logger.info('connection open');
 });
 
 module.exports = function(cb) {

@@ -1,10 +1,7 @@
 const nconf = require('nconf');
 
 nconf.set('DATABASE_CONFIG', {
-  URL: 'https://abtest-7a0da.firebaseio.com',
-  SERVICE_ACCOUNT: 'ABTest-c0decc209c7c.json',
-  LOGGING_ENABLE: false,
-  PERSISTENCE_ENABLED : true
+  MONGO_URI: 'mongodb://gustavo.santos:gfstgf1950@ds163681.mlab.com:63681/abtest',
 });
 
 nconf.set('NODE_PORT',3000);
