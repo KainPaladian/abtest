@@ -1,6 +1,7 @@
 
 const TestModel = require('../model/test');
 const CandidateModel = require('../model/candidate');
+var Logger = require('winston');
 
 exports.findAll = function (callback){
 	TestModel.find({}, function(err, tests) {
@@ -49,7 +50,9 @@ exports.execute = function (testId,callback){
 				var candidateRequestsMinor = null;
 				var testRequests = testModel.requests;
 				var now = new Date();
-				if(testModel.active && now >= new Date(testModel.startDate) && now <= new Date(testModel.endDate)){
+				var startDate = testModel.startDate;
+				var endDate = testModel.endDate;
+				if(testModel.active && (startDate===null || now >= new Date(testModel.startDate)) && (endDate===null || now <= new Date(testModel.endDate))){
 					testModel.candidates.forEach(function(candidateModel) {
 						var candidateRequests = candidateModel.requests;
 						testSelectedRequests += candidateRequests;
@@ -62,33 +65,30 @@ exports.execute = function (testId,callback){
 					percentSelectedRequests = isNaN(percentSelectedRequests)?0:percentSelectedRequests;
 					var candidateRef = null;
 					if(percentSelectedRequests>testModel.samplePercent){
-						candidateSelected = null;
+						candidateSelected =  null;
 					}
-					// testRef.transaction(function(snapshotTest){
-					// 	if(snapshotTest){
-					// 		if(snapshotTest.requests!=undefined){
-					// 			snapshotTest.requests++;
-					// 		}else{
-					// 			snapshotTest.requests = 1;
-					// 		}
-					// 	}
-					// 	return snapshotTest;
-					// });
+					testModel.update(
+						{$inc:{requests:1}}, 
+						function(error, rawResponse) {
+							if(error){
+								Logger.error(error);
+							}
+						}
+					);
 					if(candidateSelected){
-						// candidateRef.transaction(function(snapshotCandidate){
-						// 	if(snapshotCandidate){
-						// 		if(snapshotCandidate.requests!=undefined){
-						// 			snapshotCandidate.requests++;
-						// 		}else{
-						// 			snapshotCandidate.requests = 1;
-						// 		}
-						// 		if(snapshotCandidate.converted===undefined){
-						// 			snapshotCandidate.converted = 0;
-						// 		}
-						// 		snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
-						// 	}
-						// 	return snapshotCandidate;
-						// });
+						TestModel.update(
+							{
+								"candidates._id":candidateSelected.id
+							},
+							{
+								$inc:{"candidates.$.requests": 1}
+							},
+							function(error, rawResponse) {
+								if(error){
+									Logger.error(error);
+								}
+							}
+						);
 					}
 				}
 			}finally{
@@ -100,29 +100,18 @@ exports.execute = function (testId,callback){
 	});
 }
 
-exports.convert = function (testId,candidateId,callback){
-	var candidateRef = db.ref("tests/"+testId+"/candidates/"+candidateId);
-	if(candidateRef){
-		candidateRef.transaction(function(snapshotCandidate){
-			if(snapshotCandidate){
-				if(snapshotCandidate.converted==null){
-					snapshotCandidate.converted = 0;
-				}
-				if(snapshotCandidate.converted + 1 <= snapshotCandidate.requests){
-					snapshotCandidate.converted++;
-					snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
-				}
-			}
-			return snapshotCandidate;
+exports.convert = function (candidateId){
+	TestModel.update(
+		{
+			"candidates._id":candidateId
 		},
-		function(error, committed, snapshotCandidate) {
-			if (error) {
-				console.log('Transaction failed abnormally!', error);
-			} else if (!committed) {
-				console.log('We aborted the transaction (because ada already exists).');
+		{
+			$inc:{"candidates.$.converted": 1}
+		},
+		function(error, rawResponse) {
+			if(error){
+				Logger.error(error);
 			}
-		});
-	}else{
-		callback(null);
-	}
+		}
+	);
 }

@@ -67,8 +67,7 @@ exports.execute = function (req,res){
 }
 
 exports.convert = function (req,res){
-	var testId = req.params.testId;
 	var candidateId = req.params.candidateId;
-	service.convert(testId,candidateId);
+	service.convert(candidateId);
 	res.sendStatus(200);
 }

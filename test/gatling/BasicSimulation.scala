@@ -16,12 +16,12 @@ class BasicSimulation extends Simulation {
 
   val testExecuteScn = scenario("ExecuteSimulation")
     .exec(http("test/execute")
-    .post("/test/-KlRM-IEtMca88CG1nP1/execute"))
+    .post("/test/5936296ac3d49d3ca9171022/execute"))
     .pause(10)
 
   val testConvertScn = scenario("ConvertSimulation")
     .exec(http("test/convert")
-    .post("/test/-KlRM-IEtMca88CG1nP1/candidate/B1-KxD16ZZ/convert"))
+    .post("/candidate/5936296ac3d49d3ca9171023/convert"))
     .pause(10)
 
   setUp(
