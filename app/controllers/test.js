@@ -47,13 +47,8 @@ exports.update = function (req,res){
 }
 
 exports.delete = function (req,res){
-	service.delete(req.params.testId,function(testModel){
-		if(testModel){
-			res.sendStatus(200);
-		}else{
-			res.sendStatus(404);
-		};
-	});
+	service.delete(req.params.testId);
+	res.sendStatus(200);
 }
 
 exports.execute = function (req,res){

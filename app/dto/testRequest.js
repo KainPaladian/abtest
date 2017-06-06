@@ -10,8 +10,8 @@ function TestRequest(data) {
     this.active = data.active;
     if(data.candidates){
       var candidates = [];
-      data.candidates.forEach(function(data, index) {
-        candidates.push(new CandidateRequest(data));
+      data.candidates.forEach(function(candidateData, index) {
+        candidates.push(new CandidateRequest(candidateData));
       });
       this.candidates = candidates;
     }

@@ -3,40 +3,23 @@ const TestModel = require('../model/test');
 const CandidateModel = require('../model/candidate');
 
 exports.findAll = function (callback){
-	var ref = db.ref("tests");
-	ref.once("value").then(function(snapshot) {
-		var testModels = [];
-		if(snapshot){
-			snapshot.forEach(function(child,index){
-				testModels.push(new TestModel(child.val()));
-			});
-		}
-	  callback(testModels);
+	TestModel.find({}, function(err, tests) {
+	  callback(tests);
 	});
 }
 
 exports.findById = function (testId,callback){
-	var ref = db.ref("tests/"+testId);
-	ref.once("value", function(snapshot) {
-		var testModel = new TestModel(snapshot.val());
-		if(testModel.id){
-			callback(testModel);
-		}else {
-			callback(null);
-		}
-
+	TestModel.findOne({_id:testId}, function(err, tests) {
+		callback(tests);
 	});
 }
 
 exports.insert = function (testRequestDTO,callback){
-	var ref = db.ref("tests");
-	var newTestKey = ref.push().key;
-	testRequestDTO.id = newTestKey;
-	var newTestModel = new TestModel(testRequestDTO);
-	var updates = {};
-  updates['/tests/' + newTestKey] = newTestModel;
-	db.ref().update(updates);
-	this.findById(newTestKey,callback);
+	var testModel = new TestModel(testRequestDTO);
+	testModel.save(function(error){
+		 if (error) return handleError(error);
+		 callback(testModel);
+	});
 }
 
 exports.update = function (testRequestDTO,callback){
@@ -53,34 +36,22 @@ exports.update = function (testRequestDTO,callback){
 	});
 }
 
-exports.delete = function (testId,callback){
-	var ref = db.ref("tests/"+testId);
-	this.findById(testId,function(testModel){
-		if(testModel){
-			var updates = {};
-		  updates['/tests/' + testId] = null;
-			db.ref().update(updates);
-		}
-		callback(testModel);
-	});
+exports.delete = function (testId){
+	TestModel.find({_id:testId}).remove().exec();
 }
 
 exports.execute = function (testId,callback){
-	var candidateSelected=null;
-	var testModel = null;
-	var testRef = db.ref("tests/"+testId);
-	if(testRef){
-		testRef.once("value", function(snapshotTest) {
-			try {
+	TestModel.findOne({_id:testId}, function(err, testModel) {
+		var candidateSelected=null;
+		if(testModel){
+			try{
 				var testSelectedRequests = 0;
 				var candidateRequestsMinor = null;
-				testModel = new TestModel(snapshotTest.val());
-				var testRequests = testModel.requests!=undefined?testModel.requests:0;
+				var testRequests = testModel.requests;
 				var now = new Date();
 				if(testModel.active && now >= new Date(testModel.startDate) && now <= new Date(testModel.endDate)){
-					Object.keys(testModel.candidates).forEach(function(key,index) {
-						var candidateModel = testModel.candidates[key];
-						var candidateRequests = candidateModel.requests!=undefined?candidateModel.requests:0;
+					testModel.candidates.forEach(function(candidateModel) {
+						var candidateRequests = candidateModel.requests;
 						testSelectedRequests += candidateRequests;
 						if(candidateRequestsMinor===null || candidateRequests<candidateRequestsMinor){
 							candidateSelected = candidateModel;
@@ -90,45 +61,43 @@ exports.execute = function (testId,callback){
 					var percentSelectedRequests = (testSelectedRequests/testRequests);
 					percentSelectedRequests = isNaN(percentSelectedRequests)?0:percentSelectedRequests;
 					var candidateRef = null;
-					if(percentSelectedRequests<testModel.samplePercent){
-						candidateRef = db.ref("tests/"+testModel.id+"/candidates/"+candidateSelected.id);
-					}else{
+					if(percentSelectedRequests>testModel.samplePercent){
 						candidateSelected = null;
 					}
-					testRef.transaction(function(snapshotTest){
-						if(snapshotTest){
-							if(snapshotTest.requests!=undefined){
-								snapshotTest.requests++;
-							}else{
-								snapshotTest.requests = 1;
-							}
-						}
-						return snapshotTest;
-					});
-					if(candidateRef){
-						candidateRef.transaction(function(snapshotCandidate){
-							if(snapshotCandidate){
-								if(snapshotCandidate.requests!=undefined){
-									snapshotCandidate.requests++;
-								}else{
-									snapshotCandidate.requests = 1;
-								}
-								if(snapshotCandidate.converted===undefined){
-									snapshotCandidate.converted = 0;
-								}
-								snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
-							}
-							return snapshotCandidate;
-						});
+					// testRef.transaction(function(snapshotTest){
+					// 	if(snapshotTest){
+					// 		if(snapshotTest.requests!=undefined){
+					// 			snapshotTest.requests++;
+					// 		}else{
+					// 			snapshotTest.requests = 1;
+					// 		}
+					// 	}
+					// 	return snapshotTest;
+					// });
+					if(candidateSelected){
+						// candidateRef.transaction(function(snapshotCandidate){
+						// 	if(snapshotCandidate){
+						// 		if(snapshotCandidate.requests!=undefined){
+						// 			snapshotCandidate.requests++;
+						// 		}else{
+						// 			snapshotCandidate.requests = 1;
+						// 		}
+						// 		if(snapshotCandidate.converted===undefined){
+						// 			snapshotCandidate.converted = 0;
+						// 		}
+						// 		snapshotCandidate.convertionRate = snapshotCandidate.converted/snapshotCandidate.requests;
+						// 	}
+						// 	return snapshotCandidate;
+						// });
 					}
 				}
-			}finally {
-				callback(testModel,candidateSelected);
+			}finally{
+				callback(candidateSelected);
 			}
-		});
-	}else{
-		callback(testModel,candidateSelected);
-	}
+		}else{
+			callback(candidateSelected);
+		}
+	});
 }
 
 exports.convert = function (testId,candidateId,callback){

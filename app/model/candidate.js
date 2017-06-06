@@ -1,30 +1,14 @@
-function Candidate(data) {
-  var shortid = require('shortid');
-  if(data){
-    if(data.id){
-      this.id = data.id;
-    }else {
-      this.id  = shortid.generate();
-    }
-    if(data.name){
-  	 this.name = data.name;
-    }
-    if(data.loadBalancePercent){
-  	 this.loadBalancePercent = data.loadBalancePercent;
-    }
-    if(data.requests){
-      this.requests = data.requests;
-    }
-    if(data.converted){
-      this.converted = data.converted;
-    }
-    if(data.payLoad){
-      this.payLoad = data.payLoad;
-    }
-    if(data.convertionRate){
-      this.convertionRate = data.convertionRate;
-    }
-  }
-}
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+var candidateSchema = new Schema({
+  name:   { type: String, trim: true },
+  converted: { type: Number, default: 0 },
+  convertionRate: { type: Number, default: 0 },
+  requests: { type: Number, default: 0 },
+  payLoad: { type: Schema.Types.Mixed, default: 0 }
+});
+
+var Candidate = mongoose.model('Candidate', candidateSchema);
 
 module.exports = Candidate;

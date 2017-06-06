@@ -1,41 +1,19 @@
-const Candidate = require('./candidate');
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
-function Test(data) {
-  if(data){
-    var model = this;
-    if(data.id)
-      model.id = data.id;
-    if(data.active!=null){
-      model.active = data.active;
-    }
-    if(data.owner)
-      model.owner = data.owner;
-    if(data.name)
-      model.name = data.name;
-    if(data.startDate)
-      model.startDate = data.startDate;
-    if(data.endDate)
-      model.endDate = data.endDate
-    if(data.samplePercent)
-      model.samplePercent = data.samplePercent;
-    if(data.requests){
-      model.requests = data.requests;
-    }
-    if(data.candidates){
-      model.candidates = {};
-      if(data.candidates instanceof Array){
-        data.candidates.forEach(function(data, index) {
-          var candidateModel = new Candidate(data)
-          model.candidates[candidateModel.id] = candidateModel;
-        });
-      }else if(data.candidates instanceof Object){
-        Object.keys(data.candidates).forEach(function(key,index) {
-          var candidateModel = new Candidate(data.candidates[key])
-          model.candidates[candidateModel.id] = candidateModel;
-        });
-      }
-    }
-  }
-}
+var Candidate = require('./candidate');
+
+var testSchema = new Schema({
+  active:   { type: Boolean, default: true },
+  startDate: { type: Date, default: Date.now },
+  endDate: Date,
+  name:   { type: String, trim: true },
+  owner: { type: String, trim: true },
+  requests: { type: Number, default: 0 },
+  samplePercent: { type: Number, default: 100 },
+  candidates: [Candidate.schema]
+});
+
+var Test = mongoose.model('Test', testSchema);
 
 module.exports = Test;

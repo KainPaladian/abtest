@@ -12,12 +12,9 @@ function TestResponse(data) {
     dto.requests = data.requests;
     if(data.candidates){
       var candidates = [];
-      if(data.candidates instanceof Object){
-        Object.keys(data.candidates).forEach(function(key,index) {
-          var candidateResponse = new CandidateResponse(data.candidates[key])
-          candidates.push(candidateResponse);
-        });
-      }
+      data.candidates.forEach(function(candidateData, index) {
+        candidates.push(new CandidateResponse(candidateData));
+      });
       dto.candidates = candidates;
     }
   }
