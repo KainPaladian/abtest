@@ -43,4 +43,11 @@ var start =  function(cb) {
   }
 };
 
-module.exports = start;
+module.exports = {
+    start: function(cb) {
+      start(cb)
+    },
+    app: function() {
+      return app;
+    }
+};

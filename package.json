@@ -4,7 +4,7 @@
   "description": "Ab Test is a Hotmart's system to help developer teams to perform tests to verify if new features will be better than older features.",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "keywords": [
     "AB",
@@ -28,5 +28,9 @@
     "shortid": "^2.2.8",
     "winston": "^2.3.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "chai": "*",
+    "chai-http": "*",
+    "mocha": "*"
+  }
 }

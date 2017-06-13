@@ -2,6 +2,7 @@
 'use strict';
 
 var server = require('./config/initializers/server');
+var db = require('./config/initializers/database');
 var nconf = require('nconf');
 var async = require('async');
 var logger = require('winston');
@@ -26,10 +27,10 @@ logger.info('[ABTest] Starting server initialization on '+NODE_ENV+ ' environmen
 // Initialize Modules
 async.series([
   function initializeDBConnection(callback) {
-    require('./config/initializers/database')(callback);
+    db(callback);
   },
   function startServer(callback) {
-    server(callback);
+    server.start(callback);
   }], function(err) {
     if (err) {
       logger.error('initialization failed', err);
@@ -38,3 +39,9 @@ async.series([
     }
   }
 );
+
+module.exports = {
+  app: function(){
+    return server.app();
+  }
+};
