@@ -2,15 +2,19 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 var index = require('../index');
 var logger = require('winston');
+var config = require('nconf');
+
+const NODE_PORT = config.get('NODE_PORT');
+
+const URL_SERVER = "http://localhost:"+NODE_PORT+"/api";
 
 chai.use(chaiHttp);
 
 describe('Test', function() {
   it('should list ALL Tests on /test GET', function(done) {
-    chai.request("http://localhost:3000/api/1")
-      .get('/test')
+    chai.request(URL_SERVER)
+      .get('/1/test')
       .end(function(err, res){
-        logger.info(index);
         chai.expect(res).to.have.status(200);
         done();
       });
