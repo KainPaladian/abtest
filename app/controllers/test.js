@@ -66,6 +66,17 @@ exports.execute = function (req,res){
 	});
 }
 
+exports.reset = function (req,res){
+	var testId = req.params.testId;
+	service.reset(testId,function(testModel){
+		if(testModel){
+			res.json(new TestResponse(testModel));
+		}else{
+			res.sendStatus(404);
+		}
+	});
+}
+
 exports.convert = function (req,res){
 	var candidateId = req.params.candidateId;
 	service.convert(candidateId);

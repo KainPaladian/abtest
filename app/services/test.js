@@ -44,6 +44,19 @@ exports.update = function (testRequestDTO,callback){
 	);
 }
 
+exports.reset = function (testId,callback){
+	this.findById(testId,function(testModel){
+		testModel.requests = 0;
+		testModel.candidates.forEach(function(candidateModel) {
+			candidateModel.converted = 0;
+			candidateModel.requests = 0;
+		});
+		testModel.save(function(error){
+			callback(testModel);
+		});
+	});
+}
+
 exports.delete = function (testId){
 	TestModel.find({_id:testId}).remove().exec();
 }
