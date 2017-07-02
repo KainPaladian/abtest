@@ -24,17 +24,24 @@ exports.insert = function (testRequestDTO,callback){
 }
 
 exports.update = function (testRequestDTO,callback){
-	var id = testRequestDTO.id;
-	var ref = db.ref("tests/"+id);
-	this.findById(id,function(testModel){
-		if(testModel){
-			testModel = new TestModel(testRequestDTO);
-			var updates = {};
-			updates['/tests/' + id] = testModel;
-			db.ref().update(updates);
+	TestModel.findByIdAndUpdate(
+		testRequestDTO.id,
+		{
+			$set:
+			{
+				owner: testRequestDTO.owner,
+				name: testRequestDTO.name,
+				startDate: testRequestDTO.startDate,
+				endDate: testRequestDTO.endDate,
+				samplePercent: testRequestDTO.samplePercent
+			},
+		},
+		{ new: true },
+		function(error,testModelUpdated){
+			if(error)handleError(error);
+			callback(testModelUpdated);
 		}
-		callback(testModel);
-	});
+	);
 }
 
 exports.delete = function (testId){
@@ -68,7 +75,7 @@ exports.execute = function (testId,callback){
 						candidateSelected =  null;
 					}
 					testModel.update(
-						{$inc:{requests:1}}, 
+						{$inc:{requests:1}},
 						function(error, rawResponse) {
 							if(error){
 								Logger.error(error);
@@ -98,20 +105,4 @@ exports.execute = function (testId,callback){
 			callback(candidateSelected);
 		}
 	});
-}
-
-exports.convert = function (candidateId){
-	TestModel.update(
-		{
-			"candidates._id":candidateId
-		},
-		{
-			$inc:{"candidates.$.converted": 1}
-		},
-		function(error, rawResponse) {
-			if(error){
-				Logger.error(error);
-			}
-		}
-	);
 }

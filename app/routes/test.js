@@ -1,33 +1,39 @@
-const controller = require('../controllers/test');
+const testController = require('../controllers/test');
+const candidateController = require('../controllers/candidate');
 
 module.exports = function(router) {
 
   router.route('/')
   .get(function(req, res, next) {
-    controller.findAll(req,res);
+    testController.findAll(req,res);
   }).post(function(req, res, next) {
-    controller.insert(req,res);
+    testController.insert(req,res);
   });
 
   router.route('/:testId')
   .get(function(req, res, next) {
-    controller.findById(req,res);
+    testController.findById(req,res);
   })
   .put(function(req, res, next) {
-    controller.update(req,res);
+    testController.update(req,res);
   })
   .delete(function(req, res, next) {
-    controller.delete(req,res);
+    testController.delete(req,res);
   });
 
   router.route('/:testId/execute')
   .post(function(req, res, next) {
-    controller.execute(req,res);
+    testController.execute(req,res);
+  });
+
+  router.route('/:testId/candidate/:candidateId')
+  .put(function(req, res, next) {
+    candidateController.update(req,res);
   });
 
   router.route('/:testId/candidate/:candidateId/convert')
   .post(function(req, res, next) {
-    controller.convert(req,res);
+    candidateController.convert(req,res);
   });
 
 };

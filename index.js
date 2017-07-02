@@ -24,6 +24,7 @@ require('./config/environments/' + NODE_ENV);
 
 logger.info('[ABTest] Starting server initialization on '+NODE_ENV+ ' environment');
 
+
 // Initialize Modules
 async.series([
   function initializeDBConnection(callback) {

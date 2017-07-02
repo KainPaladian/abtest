@@ -15,6 +15,7 @@
   "dependencies": {
     "async": "^2.4.1",
     "body-parser": "^1.17.2",
+    "chai-arrays": "^1.0.0",
     "change-case": "^3.0.1",
     "dotenv": "^4.0.0",
     "express": "4.15.3",
