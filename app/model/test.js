@@ -6,7 +6,7 @@ var Candidate = require('./candidate');
 var testSchema = new Schema({
   active:   { type: Boolean, default: true },
   startDate: { type: Date, default: Date.now },
-  endDate: Date,
+  endDate: { type: Date, default: null },
   name:   { type: String, trim: true },
   owner: { type: String, trim: true },
   requests: { type: Number, default: 0 },

@@ -62,10 +62,15 @@ exports.delete = function (testId){
 }
 
 exports.execute = function (testId,callback){
-	TestModel.findOne({_id:testId}, function(err, testModel) {
+	TestModel.aggregate(
+		//{_id:testId},
+		{ $match: {
+        _id : testId
+    }},
+		function(err, testModel) {
 		var candidateSelected=null;
 		if(testModel){
-			try{
+			try {
 				var testSelectedRequests = 0;
 				var candidateRequestsMinor = null;
 				var testRequests = testModel.requests;
@@ -112,10 +117,10 @@ exports.execute = function (testId,callback){
 					}
 				}
 			}finally{
-				callback(candidateSelected);
+				callback(testModel,candidateSelected);
 			}
 		}else{
-			callback(candidateSelected);
+			callback(null,null);
 		}
 	});
 }

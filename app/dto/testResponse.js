@@ -10,6 +10,7 @@ function TestResponse(data) {
   	dto.endDate = data.endDate
   	dto.samplePercent = data.samplePercent;
     dto.requests = data.requests;
+    dto.active = data.active;
     if(data.candidates){
       var candidates = [];
       data.candidates.forEach(function(candidateData, index) {
