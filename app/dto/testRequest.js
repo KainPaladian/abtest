@@ -8,6 +8,7 @@ function TestRequest(data) {
   	this.endDate = data.endDate
   	this.samplePercent = data.samplePercent;
     this.active = data.active;
+    this.transactionRequired = data.transactionRequired;
     if(data.candidates){
       var candidates = [];
       data.candidates.forEach(function(candidateData, index) {

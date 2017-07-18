@@ -6,6 +6,8 @@ const TestResponse = require('../dto/testResponse');
 const ExecuteRequest = require('../dto/executeRequest');
 const ExecuteResponse = require('../dto/executeResponse');
 
+const InvalidParameters = require('../exceptions/invalidParameters');
+
 exports.findAll = function (req,res){
 	service.findAll(function(testModels) {
 		var testsResponse = [];
@@ -53,17 +55,24 @@ exports.delete = function (req,res){
 
 exports.execute = function (req,res){
 	var testId = req.params.testId;
-	service.execute(testId,function(testModel,candidateModel){
-		if(testModel){
-			if(candidateModel){
-				res.json(new ExecuteResponse(testModel.id,candidateModel));
+	var transactionRef = req.query.transactionRef;
+	try{
+		service.execute(testId,transactionRef,function(testModel,candidateModel){
+			if(testModel){
+				if(candidateModel){
+					res.json(new ExecuteResponse(testModel.id,candidateModel));
+				}else{
+					res.sendStatus(200);
+				}
 			}else{
-				res.sendStatus(200);
+				res.sendStatus(404);
 			}
-		}else{
-			res.sendStatus(404);
+		});
+	}catch(error){
+		if(error instanceof InvalidParameters){
+			res.sendStatus(412,error.message);
 		}
-	});
+	}
 }
 
 exports.reset = function (req,res){

@@ -1,6 +1,8 @@
 
 const TestModel = require('../model/test');
+const TransactionModel = require('../model/transaction');
 const CandidateModel = require('../model/candidate');
+const InvalidParameters = require('../exceptions/invalidParameters');
 var Logger = require('winston');
 
 exports.findAll = function (callback){
@@ -33,7 +35,8 @@ exports.update = function (testRequestDTO,callback){
 				name: testRequestDTO.name,
 				startDate: testRequestDTO.startDate,
 				endDate: testRequestDTO.endDate,
-				samplePercent: testRequestDTO.samplePercent
+				samplePercent: testRequestDTO.samplePercent,
+				transactionRequired: testRequestDTO.transactionRequired
 			},
 		},
 		{ new: true },
@@ -61,15 +64,15 @@ exports.delete = function (testId){
 	TestModel.find({_id:testId}).remove().exec();
 }
 
-exports.execute = function (testId,callback){
-	TestModel.aggregate(
-		//{_id:testId},
-		{ $match: {
-        _id : testId
-    }},
+exports.execute = function (testId,transactionRef,callback){
+	TestModel.findById(
+		testId,
 		function(err, testModel) {
 		var candidateSelected=null;
 		if(testModel){
+			if(testModel.transactionRequired && transactionRef== undefined){
+				throw new InvalidParameters("transactionRef is required.");
+			}
 			try {
 				var testSelectedRequests = 0;
 				var candidateRequestsMinor = null;
@@ -77,7 +80,7 @@ exports.execute = function (testId,callback){
 				var now = new Date();
 				var startDate = testModel.startDate;
 				var endDate = testModel.endDate;
-				if(testModel.active && (startDate===null || now >= new Date(testModel.startDate)) && (endDate===null || now <= new Date(testModel.endDate))){
+				if(testModel.active && (!startDate || now >= new Date(testModel.startDate)) && (!endDate || now <= new Date(testModel.endDate))){
 					testModel.candidates.forEach(function(candidateModel) {
 						var candidateRequests = candidateModel.requests;
 						testSelectedRequests += candidateRequests;
@@ -92,29 +95,7 @@ exports.execute = function (testId,callback){
 					if(percentSelectedRequests>testModel.samplePercent){
 						candidateSelected =  null;
 					}
-					testModel.update(
-						{$inc:{requests:1}},
-						function(error, rawResponse) {
-							if(error){
-								Logger.error(error);
-							}
-						}
-					);
-					if(candidateSelected){
-						TestModel.update(
-							{
-								"candidates._id":candidateSelected.id
-							},
-							{
-								$inc:{"candidates.$.requests": 1}
-							},
-							function(error, rawResponse) {
-								if(error){
-									Logger.error(error);
-								}
-							}
-						);
-					}
+					incrementTest(transactionRef,testModel,candidateSelected);
 				}
 			}finally{
 				callback(testModel,candidateSelected);
@@ -123,4 +104,42 @@ exports.execute = function (testId,callback){
 			callback(null,null);
 		}
 	});
+}
+
+function sleep(ms) {
+    var unixtime_ms = new Date().getTime();
+    while(new Date().getTime() < unixtime_ms + ms) {}
+}
+
+function incrementTest(transactionRef,test,candidate) {
+	test.update(
+		{ $inc : { requests: 1 } },
+		function(error, rawResponse) {
+			if(error){
+				Logger.error(error);
+			}
+		}
+	);
+	if(candidate){
+		TestModel.update(
+			{ "candidates._id": candidate.id },
+			{ $inc: { "candidates.$.requests": 1 } },
+			function(error, rawResponse) {
+				if(error){
+					Logger.error(error);
+				}
+			}
+		);
+		if(transactionRef){
+			var transaction = new TransactionModel( { _id: transactionRef,converted: 0 } );
+			test.update(
+				{ $addToSet: { transactions:transaction } },
+				function(error, rawResponse) {
+					if(error){
+						Logger.error(error);
+					}
+				}
+			);
+		}
+	}
 }
