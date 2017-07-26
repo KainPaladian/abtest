@@ -1,8 +1,11 @@
 
 const TestModel = require('../model/test');
 const TransactionModel = require('../model/transaction');
+const TestTransactionsModel = require('../model/testTransactions');
 const CandidateModel = require('../model/candidate');
-const InvalidParameters = require('../exceptions/invalidParameters');
+
+const InvalidParametersException = require('../exceptions/invalidParametersException');
+
 var Logger = require('winston');
 
 exports.findAll = function (callback){
@@ -12,8 +15,19 @@ exports.findAll = function (callback){
 }
 
 exports.findById = function (testId,callback){
-	TestModel.findOne({_id:testId}, function(err, tests) {
-		callback(tests);
+	TestModel.findOne({_id:testId}, function(err, testModel) {
+		if(testModel && testModel!=undefined){
+			if(testModel.transactionRequired){
+				TestTransactionsModel.findOne({testId:testId}, function(err, testTransactionsModel) {
+					testModel.transactions = testTransactionsModel.transactions;
+					callback(testModel);
+				});
+			}else{
+				callback(testModel);
+			}
+		}else {
+			callback(testModel);
+		}
 	});
 }
 
@@ -48,15 +62,32 @@ exports.update = function (testRequestDTO,callback){
 }
 
 exports.reset = function (testId,callback){
-	this.findById(testId,function(testModel){
-		testModel.requests = 0;
-		testModel.candidates.forEach(function(candidateModel) {
-			candidateModel.converted = 0;
-			candidateModel.requests = 0;
-		});
-		testModel.save(function(error){
-			callback(testModel);
-		});
+	findById = this.findById;
+	TestModel.findById(testId,function(error,testModel){
+		if(testModel){
+			testModel.requests = 0;
+			testModel.candidates.forEach(function(candidateModel){
+				candidateModel.converted = 0;
+				candidateModel.requests = 0;
+				candidateModel.convertionRate = 0;
+			});
+			testModel.save(function(error,testModel){
+				if(testModel.transactionRequired){
+					TestTransactionsModel.findOneAndUpdate(
+						{ testId : testId },
+						{ $set : { transactions : [] } },
+						function(err,numberAffected,raw){
+							if (error) return Logger.error(error);
+							findById(testModel.id,callback);
+						}
+					);
+				}else{
+					findById(testModel.id,callback);
+				}
+			});
+		}else{
+			callback(null);
+		}
 	});
 }
 
@@ -65,59 +96,67 @@ exports.delete = function (testId){
 }
 
 exports.execute = function (testId,transactionRef,callback){
-	TestModel.findById(
-		testId,
-		function(err, testModel) {
-		var candidateSelected=null;
+	TestModel.findById(testId,function(err,testModel) {
 		if(testModel){
-			if(testModel.transactionRequired && transactionRef== undefined){
-				throw new InvalidParameters("transactionRef is required.");
-			}
-			try {
-				var testSelectedRequests = 0;
-				var candidateRequestsMinor = null;
-				var testRequests = testModel.requests;
-				var now = new Date();
-				var startDate = testModel.startDate;
-				var endDate = testModel.endDate;
-				if(testModel.active && (!startDate || now >= new Date(testModel.startDate)) && (!endDate || now <= new Date(testModel.endDate))){
-					testModel.candidates.forEach(function(candidateModel) {
-						var candidateRequests = candidateModel.requests;
-						testSelectedRequests += candidateRequests;
-						if(candidateRequestsMinor===null || candidateRequests<candidateRequestsMinor){
-							candidateSelected = candidateModel;
-							candidateRequestsMinor = candidateRequests;
-						}
-					});
-					var percentSelectedRequests = (testSelectedRequests/testRequests);
-					percentSelectedRequests = isNaN(percentSelectedRequests)?0:percentSelectedRequests;
-					var candidateRef = null;
-					if(percentSelectedRequests>testModel.samplePercent){
-						candidateSelected =  null;
-					}
-					incrementTest(transactionRef,testModel,candidateSelected);
+			if(testModel.transactionRequired){
+				if(transactionRef==undefined){
+					callback(null,null,new InvalidParametersException("TransactionRef as query param is required."));
+				}else{
+					TestTransactionsModel.findOne(
+						{'testId':testId,'transactions.ref': transactionRef},
+						function(error,testTransactionsModel){
+							if(testTransactionsModel && testTransactionsModel!=undefined){
+								callback(null,null,new InvalidParametersException("TransactionRef has been used."));
+							}else{
+								_execute(testModel,transactionRef,callback);
+							}
+						});
 				}
-			}finally{
-				callback(testModel,candidateSelected);
+			}else{
+				_execute(testModel,transactionRef,callback);
 			}
 		}else{
-			callback(null,null);
+			callback();
 		}
 	});
 }
 
-function sleep(ms) {
-    var unixtime_ms = new Date().getTime();
-    while(new Date().getTime() < unixtime_ms + ms) {}
+function _execute(testModel,transactionRef,callback){
+	var candidateSelected=null;
+	try {
+		var testSelectedRequests = 0;
+		var candidateRequestsMinor = null;
+		var testRequests = testModel.requests;
+		var now = new Date();
+		var startDate = testModel.startDate;
+		var endDate = testModel.endDate;
+		if(testModel.active && (!startDate || now >= new Date(testModel.startDate)) && (!endDate || now <= new Date(testModel.endDate))){
+			testModel.candidates.forEach(function(candidateModel) {
+				var candidateRequests = candidateModel.requests;
+				testSelectedRequests += candidateRequests;
+				if(candidateRequestsMinor===null || candidateRequests<candidateRequestsMinor){
+					candidateSelected = candidateModel;
+					candidateRequestsMinor = candidateRequests;
+				}
+			});
+			var percentSelectedRequests = (testSelectedRequests/testRequests);
+			percentSelectedRequests = isNaN(percentSelectedRequests)?0:percentSelectedRequests;
+			var candidateRef = null;
+			if(percentSelectedRequests>testModel.samplePercent){
+				candidateSelected =  null;
+			}
+			incrementTest(transactionRef,testModel,candidateSelected);
+		}
+	}finally{
+		callback(testModel,candidateSelected);
+	}
 }
 
 function incrementTest(transactionRef,test,candidate) {
 	test.update(
 		{ $inc : { requests: 1 } },
 		function(error, rawResponse) {
-			if(error){
-				Logger.error(error);
-			}
+			if (error) return Logger.error(error);
 		}
 	);
 	if(candidate){
@@ -125,19 +164,17 @@ function incrementTest(transactionRef,test,candidate) {
 			{ "candidates._id": candidate.id },
 			{ $inc: { "candidates.$.requests": 1 } },
 			function(error, rawResponse) {
-				if(error){
-					Logger.error(error);
-				}
+				if (error) return Logger.error(error);
 			}
 		);
-		if(transactionRef){
-			var transaction = new TransactionModel( { _id: transactionRef,converted: 0 } );
-			test.update(
-				{ $addToSet: { transactions:transaction } },
-				function(error, rawResponse) {
-					if(error){
-						Logger.error(error);
-					}
+		if(test.transactionRequired && transactionRef){
+			var transaction = new TransactionModel( { ref: transactionRef,converted: 0 } );
+			TestTransactionsModel.findOneAndUpdate(
+				{ testId: test.id },
+				{ $addToSet: { transactions: transaction } },
+				{ upsert: true },
+				function(error,numberAffected,raw){
+					if (error) return Logger.error(error);
 				}
 			);
 		}

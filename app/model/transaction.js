@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var transactionSchema = new Schema({
-  _id: { type: String },
+  ref:  { type: String},
   converted:  { type: Boolean, default: true }
 });
 

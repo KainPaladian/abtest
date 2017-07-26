@@ -6,7 +6,7 @@ const TestResponse = require('../dto/testResponse');
 const ExecuteRequest = require('../dto/executeRequest');
 const ExecuteResponse = require('../dto/executeResponse');
 
-const InvalidParameters = require('../exceptions/invalidParameters');
+const InvalidParametersException = require('../exceptions/invalidParametersException');
 
 exports.findAll = function (req,res){
 	service.findAll(function(testModels) {
@@ -57,7 +57,14 @@ exports.execute = function (req,res){
 	var testId = req.params.testId;
 	var transactionRef = req.query.transactionRef;
 	try{
-		service.execute(testId,transactionRef,function(testModel,candidateModel){
+		service.execute(testId,transactionRef,function(testModel,candidateModel,error){
+			if(error){
+				if(error instanceof InvalidParametersException){
+					res.status(412).send(error.message);
+				}else{
+					res.status(500).send(error);
+				}
+			}
 			if(testModel){
 				if(candidateModel){
 					res.json(new ExecuteResponse(testModel.id,candidateModel));
@@ -68,10 +75,8 @@ exports.execute = function (req,res){
 				res.sendStatus(404);
 			}
 		});
-	}catch(error){
-		if(error instanceof InvalidParameters){
-			res.sendStatus(412,error.message);
-		}
+	}catch(err){
+			res.sendStatus(500);
 	}
 }
 

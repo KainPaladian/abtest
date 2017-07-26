@@ -2,7 +2,6 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var Candidate = require('./candidate');
-var Transaction = require('./transaction');
 
 var testSchema = new Schema({
   active:   { type: Boolean, default: true },
@@ -13,8 +12,7 @@ var testSchema = new Schema({
   owner: { type: String, trim: true },
   requests: { type: Number, default: 0 },
   samplePercent: { type: Number, default: 100 },
-  candidates: [Candidate.schema],
-  transactions: [Transaction.schema]
+  candidates: [Candidate.schema]
 });
 
 var Test = mongoose.model('Test', testSchema);

@@ -1,6 +1,7 @@
 function TransactionResponse(data) {
 	if(data){
-		this.ref = data._id;
+		this.id = data._id;
+		this.ref = data.ref;
 		this.converted = data.converted
 	}
 }
