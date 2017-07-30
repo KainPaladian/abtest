@@ -1,0 +1,439 @@
+{
+	"variables": [],
+	"info": {
+		"name": "ABTest",
+		"_postman_id": "aaab31ce-e9e7-659c-2716-a1d8cf5bc8a0",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "candidate",
+			"description": "",
+			"item": [
+				{
+					"name": "v1",
+					"description": "",
+					"item": [
+						{
+							"name": "Update",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/candidate/:candidateId",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										"candidate",
+										":candidateId"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "candidateId",
+											"value": "asd"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": " {\n    \"name\": \"SEND_SMS_1\",\n    \"payLoad\": {\n        \"SEND_SMS\": true\n    }\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Convert",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId/candidate/:candidateId/convert",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId",
+										"candidate",
+										":candidateId",
+										"convert"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597e3c4183c2954709e19327"
+										},
+										{
+											"key": "candidateId",
+											"value": "597e3c4183c2954709e19328"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			]
+		},
+		{
+			"name": "test",
+			"description": "",
+			"item": [
+				{
+					"name": "v1",
+					"description": "",
+					"item": [
+						{
+							"name": "Insert",
+							"request": {
+								"url": "{{host}}:{{port}}/api/1/test",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"owner\": \"HOT_PAY\",\n    \"name\": \"TEST\",\n    \"startDate\": \"2017-07-29T00:00:00.000Z\",\n    \"endDate\": null,\n    \"samplePercent\": 0.05,\n    \"active\": true,\n    \"transactionRequired\": true,\n    \"candidates\": [\n        {\n            \"name\": \"CANDIDATE_1\",\n            \"payLoad\": {\n                \"param\": 1\n            }\n        },\n        {\n            \"name\": \"CANDIDATE_2\",\n            \"payLoad\": {\n                \"param\": 2\n            }\n        }\n    ]\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Execute",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId/execute?transactionRef=",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId",
+										"execute"
+									],
+									"query": [
+										{
+											"key": "transactionRef",
+											"value": "",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597e43be50089917a1991213"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Convert",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId/convert/:transactionRef",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId",
+										"convert",
+										":transactionRef"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597c7e6a3c4aca19734fe37f"
+										},
+										{
+											"key": "transactionRef",
+											"value": ""
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Find By Filter",
+							"request": {
+								"url": "{{host}}:{{port}}/api/1/test",
+								"method": "GET",
+								"header": [],
+								"body": {},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Find By Key",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597c7e6a3c4aca19734fe37f"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Update",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597c7e6a3c4aca19734fe37f"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": " {\n    \"owner\": \"HOT_PAY\",\n    \"name\": \"TEST\",\n    \"startDate\": \"2017-07-29T00:00:00.000Z\",\n    \"endDate\": \"2017-07-29T00:00:00.000Z\",\n    \"samplePercent\": 0.2,\n    \"active\": true,\n    \"transactionRequired\": true\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Reset",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId/reset",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId",
+										"reset"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597c7e6a3c4aca19734fe37f"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "Delete",
+							"request": {
+								"url": {
+									"raw": "{{host}}:{{port}}/api/1/test/:testId",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"1",
+										"test",
+										":testId"
+									],
+									"query": [],
+									"variable": [
+										{
+											"key": "testId",
+											"value": "597e37aafc92923d711793ef"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Convert",
+					"request": {
+						"url": {
+							"raw": "{{host}}:{{port}}/api/1/test/:testId/convert/:transactionRef",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"1",
+								"test",
+								":testId",
+								"convert",
+								":transactionRef"
+							],
+							"query": [],
+							"variable": [
+								{
+									"key": "testId",
+									"value": "597c7e6a3c4aca19734fe37f"
+								},
+								{
+									"key": "transactionRef",
+									"value": ""
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
