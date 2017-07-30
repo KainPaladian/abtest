@@ -6,10 +6,10 @@ start = function(cb){
 	mongoose.connect(DATABASE_CONFIG.MONGO_URI,DATABASE_CONFIG.MONGO_DB_OPTIONS);
 	var db = mongoose.connection;
 	db.on('error', function(){
-		logger.error('connection error');
+		logger.error('[ABTest] connection error');
 	});
 	db.once('open', function() {
-	  logger.info('connection open');
+	  logger.info('[ABTest] connection open');
 	});
 	if(cb){
 		cb();

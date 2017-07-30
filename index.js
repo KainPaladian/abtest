@@ -34,7 +34,7 @@ async.series([
     server.start(callback);
   }], function(err) {
     if (err) {
-      logger.error('initialization failed', err);
+      logger.error('[ABTest] initialization failed', err);
     } else {
       logger.info('[ABTest] initialized SUCCESSFULLY');
     }

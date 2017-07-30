@@ -12,4 +12,3 @@ nconf.set('DATABASE_CONFIG', {
 });
 
 nconf.set('NODE_PORT',3000);
-nconf.set('URL_CONTEXT','http://localhost');

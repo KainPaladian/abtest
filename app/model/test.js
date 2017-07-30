@@ -5,7 +5,7 @@ var Candidate = require('./candidate');
 
 var testSchema = new Schema({
   active:   { type: Boolean, default: true },
-  transactionRequired:   { type: Boolean, default: true },
+  transactionRequired:   { type: Boolean, default: false },
   startDate: { type: Date, default: Date.now },
   endDate: { type: Date, default: null },
   name:   { type: String, trim: true },

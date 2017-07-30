@@ -19,7 +19,7 @@ var start =  function(cb) {
   app.use(bodyParser.urlencoded({extended: true}));
   app.use(bodyParser.json({type: '*/*'}));
 
-  logger.info('[SERVER] Initializing routes');
+  logger.info('[ABTest] [SERVER] Initializing routes');
   require('../../app/routes/index')(app);
 
   app.use(express.static(path.join(__dirname, 'public')));
@@ -35,8 +35,9 @@ var start =  function(cb) {
   });
 
   const NODE_PORT = config.get('NODE_PORT');
+  
   app.listen(NODE_PORT);
-  logger.info('[SERVER] Listening on port ' + NODE_PORT);
+  logger.info('[ABTest] [SERVER] Listening on port ' + NODE_PORT);
 
   if (cb) {
     return cb();
