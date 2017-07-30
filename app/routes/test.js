@@ -26,6 +26,11 @@ module.exports = function(router) {
     testController.execute(req,res);
   });
 
+  router.route('/:testId/convert/:transactionRef')
+  .post(function(req, res, next) {
+    testController.convert(req,res);
+  });
+
   router.route('/:testId/reset')
   .put(function(req, res, next) {
     testController.reset(req,res);

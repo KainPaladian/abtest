@@ -5,13 +5,9 @@ const CandidateResponse = require('../dto/candidateResponse');
 
 const TestResponse = require('../dto/testResponse');
 
-exports.convert = function (req,res){
-	var candidateId = req.params.candidateId;
-	service.convert(candidateId);
-	res.sendStatus(200);
-}
+const InvalidParametersException = require('../exceptions/invalidParametersException');
 
-exports.update = function (req,res){
+exports.update = function (req, res) {
 	var testId = req.params.testId;
 	var candidateId = req.params.candidateId;
 	var candidateRequestDTO = new CandidateRequest(req.body);
@@ -20,18 +16,27 @@ exports.update = function (req,res){
 		testId,
 		candidateId,
 		candidateRequestDTO,
-		function(testModel){
-			if(testModel){
-				res.json(new TestResponse(testModel));
-			}else{
-				res.sendStatus(404);
+		function (testModel) {
+			if (testModel) {
+				return res.json(new TestResponse(testModel));
+			} else {
+				return res.sendStatus(404);
 			}
 		}
 	);
 }
 
-exports.convert = function (req,res){
+exports.convert = function (req, res) {
 	var candidateId = req.params.candidateId;
-	service.convert(candidateId);
-	res.sendStatus(200);
+	service.convertTestWithTransactionsRequired(candidateId, function (error) {
+		if (error) {
+			if (error instanceof InvalidParametersException) {
+				return res.status(412).send(error.message);
+			} else {
+				return res.status(500).send(error);
+			}
+		} else {
+			return res.sendStatus(200);
+		}
+	});
 }

@@ -1,46 +1,45 @@
 
-const TestModel = require('../model/test');
+const Test = require('../model/test');
 const TransactionModel = require('../model/transaction');
 const TestTransactionsModel = require('../model/testTransactions');
-const CandidateModel = require('../model/candidate');
+
+const candidateService = require('../services/candidate');
 
 const InvalidParametersException = require('../exceptions/invalidParametersException');
 
 var Logger = require('winston');
 
-exports.findAll = function (callback){
-	TestModel.find({}, function(err, tests) {
-	  callback(tests);
+exports.findAll = function (callback) {
+	Test.find({}, function (err, tests) {
+		callback(tests);
 	});
 }
 
-exports.findById = function (testId,callback){
-	TestModel.findOne({_id:testId}, function(err, testModel) {
-		if(testModel && testModel!=undefined){
-			if(testModel.transactionRequired){
-				TestTransactionsModel.findOne({testId:testId}, function(err, testTransactionsModel) {
-					testModel.transactions = testTransactionsModel.transactions;
-					callback(testModel);
-				});
-			}else{
-				callback(testModel);
-			}
-		}else {
-			callback(testModel);
+exports.findById = function (testId, callback) {
+	Test.findOne({ _id: testId }, function (err, test) {
+		if (test && test != undefined) {
+			TestTransactionsModel.findOne({ testId: testId }, function (err, testTransactionsModel) {
+				if (testTransactionsModel && testTransactionsModel != undefined) {
+					test.transactions = testTransactionsModel.transactions;
+				}
+				callback(test);
+			});
+		} else {
+			callback(test);
 		}
 	});
 }
 
-exports.insert = function (testRequestDTO,callback){
-	var testModel = new TestModel(testRequestDTO);
-	testModel.save(function(error){
-		 if (error) return handleError(error);
-		 callback(testModel);
+exports.insert = function (testRequestDTO, callback) {
+	var test = new Test(testRequestDTO);
+	test.save(function (error) {
+		if (error) return handleError(error);
+		callback(test);
 	});
 }
 
-exports.update = function (testRequestDTO,callback){
-	TestModel.findByIdAndUpdate(
+exports.update = function (testRequestDTO, callback) {
+	Test.findByIdAndUpdate(
 		testRequestDTO.id,
 		{
 			$set:
@@ -54,129 +53,191 @@ exports.update = function (testRequestDTO,callback){
 			},
 		},
 		{ new: true },
-		function(error,testModelUpdated){
-			if(error)handleError(error);
-			callback(testModelUpdated);
+		function (error, testUpdated) {
+			if (error) handleError(error);
+			callback(testUpdated);
 		}
 	);
 }
 
-exports.reset = function (testId,callback){
+exports.reset = function (testId, callback) {
 	findById = this.findById;
-	TestModel.findById(testId,function(error,testModel){
-		if(testModel){
-			testModel.requests = 0;
-			testModel.candidates.forEach(function(candidateModel){
-				candidateModel.converted = 0;
-				candidateModel.requests = 0;
-				candidateModel.convertionRate = 0;
+	Test.findById(testId, function (error, test) {
+		if (test) {
+			test.requests = 0;
+			test.candidates.forEach(function (newCandidate) {
+				newCandidate.converted = 0;
+				newCandidate.requests = 0;
+				newCandidate.convertionRate = 0;
 			});
-			testModel.save(function(error,testModel){
-				if(testModel.transactionRequired){
-					TestTransactionsModel.findOneAndUpdate(
-						{ testId : testId },
-						{ $set : { transactions : [] } },
-						function(err,numberAffected,raw){
-							if (error) return Logger.error(error);
-							findById(testModel.id,callback);
-						}
-					);
-				}else{
-					findById(testModel.id,callback);
-				}
+			test.save(function (error, test) {
+				TestTransactionsModel.findOneAndUpdate(
+					{ testId: testId },
+					{ $set: { transactions: [] } },
+					function (err, numberAffected, raw) {
+						if (error) return Logger.error(error);
+						findById(test.id, callback);
+					}
+				);
 			});
-		}else{
+		} else {
 			callback(null);
 		}
 	});
 }
 
-exports.delete = function (testId){
-	TestModel.find({_id:testId}).remove().exec();
+exports.delete = function (testId) {
+	Test.find({ _id: testId }).remove().exec();
 }
 
-exports.execute = function (testId,transactionRef,callback){
-	TestModel.findById(testId,function(err,testModel) {
-		if(testModel){
-			if(testModel.transactionRequired){
-				if(transactionRef==undefined){
-					callback(null,null,new InvalidParametersException("TransactionRef as query param is required."));
-				}else{
+exports.execute = function (testId, transactionRef, callback) {
+	Test.findById(testId, function (err, test) {
+		if (test) {
+			if (test.transactionRequired) {
+				if (transactionRef == undefined) {
+					callback(test,
+						null,
+						transactionRef,
+						new InvalidParametersException("TransactionRef as query param is required."));
+				} else {
 					TestTransactionsModel.findOne(
-						{'testId':testId,'transactions.ref': transactionRef},
-						function(error,testTransactionsModel){
-							if(testTransactionsModel && testTransactionsModel!=undefined){
-								callback(null,null,new InvalidParametersException("TransactionRef has been used."));
-							}else{
-								_execute(testModel,transactionRef,callback);
+						{ 'testId': testId, 'transactions.ref': transactionRef },
+						function (error, testTransactionsModel) {
+							if (testTransactionsModel && testTransactionsModel != undefined) {
+								callback(
+									test,
+									null,
+									transactionRef,
+									new InvalidParametersException("TransactionRef has been used."));
+							} else {
+								processExecute(test, transactionRef, callback);
 							}
 						});
 				}
-			}else{
-				_execute(testModel,transactionRef,callback);
+			} else {
+				processExecute(test, transactionRef, callback);
 			}
-		}else{
+		} else {
 			callback();
 		}
 	});
 }
 
-function _execute(testModel,transactionRef,callback){
-	var candidateSelected=null;
+function processExecute(test, transactionRef, callback) {
+	var selectedCandidate = null;
 	try {
-		var testSelectedRequests = 0;
-		var candidateRequestsMinor = null;
-		var testRequests = testModel.requests;
-		var now = new Date();
-		var startDate = testModel.startDate;
-		var endDate = testModel.endDate;
-		if(testModel.active && (!startDate || now >= new Date(testModel.startDate)) && (!endDate || now <= new Date(testModel.endDate))){
-			testModel.candidates.forEach(function(candidateModel) {
-				var candidateRequests = candidateModel.requests;
-				testSelectedRequests += candidateRequests;
-				if(candidateRequestsMinor===null || candidateRequests<candidateRequestsMinor){
-					candidateSelected = candidateModel;
-					candidateRequestsMinor = candidateRequests;
-				}
-			});
-			var percentSelectedRequests = (testSelectedRequests/testRequests);
-			percentSelectedRequests = isNaN(percentSelectedRequests)?0:percentSelectedRequests;
-			var candidateRef = null;
-			if(percentSelectedRequests>testModel.samplePercent){
-				candidateSelected =  null;
-			}
-			incrementTest(transactionRef,testModel,candidateSelected);
-		}
-	}finally{
-		callback(testModel,candidateSelected);
+		selectedCandidate = selectCandidate(test);
+		incrementTest(test, selectedCandidate, transactionRef);
+	} finally {
+		callback(test, selectedCandidate, transactionRef, null);
 	}
 }
 
-function incrementTest(transactionRef,test,candidate) {
+function selectCandidate(test) {
+	var selectedCandidate = null;
+	var sumTestedRequests = 0;
+	if (test.active
+		&& (!test.startDate || new Date() >= new Date(test.startDate))
+		&& (!test.endDate || now <= new Date(test.endDate))) {
+		test.candidates.forEach(function (newCandidate) {
+			sumTestedRequests += newCandidate.requests;
+			if (selectedCandidate === null || newCandidate.requests < selectedCandidate.requests) {
+				selectedCandidate = newCandidate;
+			}
+		});
+		var percentSelectedRequests = (sumTestedRequests / test.requests);
+		percentSelectedRequests = isNaN(percentSelectedRequests) ? 0 : percentSelectedRequests;
+		var candidateRef = null;
+		if (percentSelectedRequests > test.samplePercent) {
+			selectedCandidate = null;
+		}
+	}
+	return selectedCandidate;
+}
+
+function incrementTest(test, candidate, transactionRef) {
+	var resumeCandidate = null;
 	test.update(
-		{ $inc : { requests: 1 } },
-		function(error, rawResponse) {
+		{ $inc: { requests: 1 } },
+		function (error, rawResponse) {
 			if (error) return Logger.error(error);
 		}
 	);
-	if(candidate){
-		TestModel.update(
+	if (candidate) {
+		resumeCandidate = {
+			id: candidate.id,
+			name: candidate.name,
+			payLoad: candidate.payLoad
+		};
+		Test.update(
 			{ "candidates._id": candidate.id },
 			{ $inc: { "candidates.$.requests": 1 } },
-			function(error, rawResponse) {
+			function (error, rawResponse) {
 				if (error) return Logger.error(error);
 			}
 		);
-		if(test.transactionRequired && transactionRef){
-			var transaction = new TransactionModel( { ref: transactionRef,converted: 0 } );
-			TestTransactionsModel.findOneAndUpdate(
-				{ testId: test.id },
-				{ $addToSet: { transactions: transaction } },
-				{ upsert: true },
-				function(error,numberAffected,raw){
-					if (error) return Logger.error(error);
-				}
-			);
-		}
 	}
+	var transaction = test.transactionRequired ? new TransactionModel({
+		ref: transactionRef,
+		candidate: resumeCandidate,
+		executeDate: new Date(),
+		converted: false
+	}) : new TransactionModel({
+		candidate: resumeCandidate,
+		executeDate: new Date()
+	});
+
+	TestTransactionsModel.findOneAndUpdate(
+		{ testId: test.id },
+		{ $addToSet: { transactions: transaction } },
+		{ upsert: true },
+		function (error, numberAffected, raw) {
+			if (error) return Logger.error(error);
+		}
+	);
+}
+
+exports.convert = function (testId, transactionRef, callback) {
+	TestTransactionsModel.findOne(
+		{ testId: testId, 'transactions.ref': transactionRef })
+		.select({ transactions: { $elemMatch: { ref: transactionRef } } })
+		.exec(
+		function (e1, testTransactionsModel) {
+			if (e1) {
+				callback(e1);
+			} else {
+				if (testTransactionsModel === null
+					|| testTransactionsModel.transactions === null
+					|| testTransactionsModel.transactions.lenght == 0) {
+					callback(new InvalidParametersException("TransactionRef was not found."));
+				} else {
+					var transaction = testTransactionsModel.transactions[0];
+					if (transaction.candidate === null) {
+						callback(new InvalidParametersException("Transaction cannot be converted because it has not candidate."));
+					} else if(transaction.converted){
+						callback(new InvalidParametersException("Transaction has been converted."));
+					} else {
+						candidateService.convertCandidate(transaction.candidate.id, function (e2, candidate) {
+							if (e2) {
+								callback(e2);
+							}
+							TestTransactionsModel.findOneAndUpdate(
+								{
+									testId: testId, 'transactions.ref': transactionRef
+								},
+								{
+									$set:
+									{ 'transactions.$.converted': true, 'transactions.$.convertDate': new Date() }
+								}, function (e3, transaction) {
+									if (e3) {
+										callback(e3);
+									}
+									callback(e3, transaction);
+								}
+							);
+						});
+					}
+				}
+			}
+		});
 }

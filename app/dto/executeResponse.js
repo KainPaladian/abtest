@@ -1,10 +1,13 @@
 const CandidateResponse = require('./candidateResponse');
 
-function ExecuteResponse(testId, candidateModel) {
-  if(testId){
+function ExecuteResponse(testId, candidateModel, transactionRef) {
+  if (transactionRef) {
+    this.transactionRef = transactionRef;
+  }
+  if (testId) {
     this.test = {};
     this.test.id = testId;
-    if(candidateModel){
+    if (candidateModel) {
       this.test.candidate = {};
       this.test.candidate.id = candidateModel.id;
       this.test.candidate.payLoad = candidateModel.payLoad;
