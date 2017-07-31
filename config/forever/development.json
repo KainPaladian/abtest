@@ -1,9 +1,12 @@
 {
-    "l":"forever.log",
-    "o":"out.log",
-    "e":"err.log",
-    "a":true,
-    "w":true,
-    "script": "index.js",
+    "l": "forever.log",
+    "o": "out.log",
+    "e": "err.log",
+    "a": true,
+    "w": true,
+    "d": true,
+    "m": 1,
+    "killTree": true,
+    "script": "main.js",
     "sourceDir": ""
 }
