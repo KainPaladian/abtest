@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>transactionResponse.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "app/dto/transactionResponse.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>transactionResponse.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> CandidateResponse = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./candidateResponse'</span>);
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">TransactionResponse</span>(<span class="hljs-params">data</span>) </span>{
+	<span class="hljs-keyword">if</span> (data) {
+		<span class="hljs-keyword">this</span>.id = data._id;
+		<span class="hljs-keyword">this</span>.ref = data.ref;
+		<span class="hljs-keyword">this</span>.executeDate = data.executeDate;
+		<span class="hljs-keyword">this</span>.candidate = data.candidate === <span class="hljs-literal">null</span> ? <span class="hljs-literal">null</span> : <span class="hljs-keyword">new</span> CandidateResponse(data.candidate);
+		<span class="hljs-keyword">this</span>.converted = data.converted
+		<span class="hljs-keyword">this</span>.convertDate = data.convertDate;
+	}
+}
+
+<span class="hljs-built_in">module</span>.exports = TransactionResponse;
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>candidate.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "app/services/candidate.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>candidate.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">var</span> Logger = <span class="hljs-built_in">require</span>(<span class="hljs-string">'winston'</span>);
+
+<span class="hljs-keyword">const</span> CandidateModel = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../model/candidate'</span>);
+<span class="hljs-keyword">const</span> TestModel = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../model/test'</span>);
+
+<span class="hljs-keyword">const</span> InvalidParametersException = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../exceptions/invalidParametersException'</span>);
+
+exports.update = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testId, candidateId, candidateRequestDTO, callback</span>) </span>{
+	TestModel.findOneAndUpdate(
+		{ <span class="hljs-string">"_id"</span>: testId, <span class="hljs-string">"candidates._id"</span>: candidateId },
+		{
+			<span class="hljs-string">"$set"</span>:
+			{
+				<span class="hljs-string">"candidates.$.name"</span>: candidateRequestDTO.name,
+				<span class="hljs-string">"candidates.$.payLoad"</span>: candidateRequestDTO.payLoad
+			},
+		},
+		{ <span class="hljs-attr">new</span>: <span class="hljs-literal">true</span> },
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, testModelUpdated</span>) </span>{
+			callback(testModelUpdated);
+		}
+	);
+}
+
+exports.convertTestWithTransactionsRequired = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">candidateId, callback</span>) </span>{
+	TestModel.findOne({ <span class="hljs-string">"candidates._id"</span>: candidateId },
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, test</span>) </span>{
+			<span class="hljs-keyword">if</span> (error) {
+				callback(error);
+			} <span class="hljs-keyword">else</span> {
+				<span class="hljs-keyword">if</span> (test.transactionRequired) {
+					callback(<span class="hljs-keyword">new</span> InvalidParametersException(<span class="hljs-string">"This test required a transactionRef, so you can't call convert API by candidate. See API ~/test/{testeId}/convert/{transactionRef}. "</span>));
+				} <span class="hljs-keyword">else</span> {
+					convert(candidateId, callback);
+				}
+			}
+		});
+}
+exports.convertCandidate = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">candidateId, callback</span>) </span>{
+	convert(candidateId, callback);
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">convert</span>(<span class="hljs-params">candidateId, callback</span>) </span>{
+	TestModel.update(
+		{
+			<span class="hljs-string">"candidates._id"</span>: candidateId
+		},
+		{
+			<span class="hljs-attr">$inc</span>: { <span class="hljs-string">"candidates.$.converted"</span>: <span class="hljs-number">1</span> }
+		},
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, candidate</span>) </span>{
+			<span class="hljs-keyword">if</span> (error) {
+				Logger.error(error);
+			}
+			callback(error, candidate);
+		}
+	);
+}
+
+
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

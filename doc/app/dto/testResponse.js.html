@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>testResponse.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "app/dto/testResponse.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>testResponse.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> CandidateResponse = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./candidateResponse'</span>);
+<span class="hljs-keyword">const</span> TransactionResponse = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./transactionResponse'</span>);
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">TestResponse</span>(<span class="hljs-params">data</span>) </span>{
+  <span class="hljs-keyword">if</span>(data){
+    <span class="hljs-keyword">var</span> dto = <span class="hljs-keyword">this</span>;
+    dto.id = data.id;
+    dto.owner = data.owner;
+  	dto.name = data.name;
+  	dto.startDate = data.startDate;
+  	dto.endDate = data.endDate
+  	dto.samplePercent = data.samplePercent;
+    dto.requests = data.requests;
+    dto.active = data.active;
+    dto.transactionRequired = data.transactionRequired;
+    <span class="hljs-keyword">if</span>(data.candidates){
+      <span class="hljs-keyword">var</span> candidates = [];
+      data.candidates.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">candidateData, index</span>) </span>{
+        candidates.push(<span class="hljs-keyword">new</span> CandidateResponse(candidateData));
+      });
+      dto.candidates = candidates;
+    }
+    <span class="hljs-keyword">if</span>(data.transactions){
+      <span class="hljs-keyword">var</span> transactions = [];
+      data.transactions.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">transactionData, index</span>) </span>{
+        transactions.push(<span class="hljs-keyword">new</span> TransactionResponse(transactionData));
+      });
+      dto.transactions = transactions;
+    }
+  }
+}
+
+<span class="hljs-built_in">module</span>.exports = TestResponse;
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

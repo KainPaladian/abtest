@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>candidate.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "app/controllers/candidate.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>candidate.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">const</span> service = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../services/candidate'</span>);
+
+<span class="hljs-keyword">const</span> CandidateRequest = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../dto/candidateRequest'</span>);
+<span class="hljs-keyword">const</span> CandidateResponse = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../dto/candidateResponse'</span>);
+
+<span class="hljs-keyword">const</span> TestResponse = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../dto/testResponse'</span>);
+
+<span class="hljs-keyword">const</span> InvalidParametersException = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../exceptions/invalidParametersException'</span>);
+
+exports.update = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+	<span class="hljs-keyword">var</span> testId = req.params.testId;
+	<span class="hljs-keyword">var</span> candidateId = req.params.candidateId;
+	<span class="hljs-keyword">var</span> candidateRequestDTO = <span class="hljs-keyword">new</span> CandidateRequest(req.body);
+	candidateRequestDTO.id = candidateId;
+	service.update(
+		testId,
+		candidateId,
+		candidateRequestDTO,
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testModel</span>) </span>{
+			<span class="hljs-keyword">if</span> (testModel) {
+				<span class="hljs-keyword">return</span> res.json(<span class="hljs-keyword">new</span> TestResponse(testModel));
+			} <span class="hljs-keyword">else</span> {
+				<span class="hljs-keyword">return</span> res.sendStatus(<span class="hljs-number">404</span>);
+			}
+		}
+	);
+}
+
+exports.convert = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res</span>) </span>{
+	<span class="hljs-keyword">var</span> candidateId = req.params.candidateId;
+	service.convertTestWithTransactionsRequired(candidateId, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{
+		<span class="hljs-keyword">if</span> (error) {
+			<span class="hljs-keyword">if</span> (error <span class="hljs-keyword">instanceof</span> InvalidParametersException) {
+				<span class="hljs-keyword">return</span> res.status(<span class="hljs-number">412</span>).send(error.message);
+			} <span class="hljs-keyword">else</span> {
+				<span class="hljs-keyword">return</span> res.status(<span class="hljs-number">500</span>).send(error);
+			}
+		} <span class="hljs-keyword">else</span> {
+			<span class="hljs-keyword">return</span> res.sendStatus(<span class="hljs-number">200</span>);
+		}
+	});
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

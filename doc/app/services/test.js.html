@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>test.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "app/services/test.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>test.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">
+<span class="hljs-keyword">const</span> Test = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../model/test'</span>);
+<span class="hljs-keyword">const</span> TransactionModel = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../model/transaction'</span>);
+<span class="hljs-keyword">const</span> TestTransactionsModel = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../model/testTransactions'</span>);
+
+<span class="hljs-keyword">const</span> candidateService = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../services/candidate'</span>);
+
+<span class="hljs-keyword">const</span> InvalidParametersException = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../exceptions/invalidParametersException'</span>);
+
+<span class="hljs-keyword">var</span> Logger = <span class="hljs-built_in">require</span>(<span class="hljs-string">'winston'</span>);
+
+exports.findAll = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">callback</span>) </span>{
+	Test.find({}, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err, tests</span>) </span>{
+		callback(tests);
+	});
+}
+
+exports.findById = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testId, callback</span>) </span>{
+	Test.findOne({ <span class="hljs-attr">_id</span>: testId }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err, test</span>) </span>{
+		<span class="hljs-keyword">if</span> (test &amp;&amp; test != <span class="hljs-literal">undefined</span>) {
+			TestTransactionsModel.findOne({ <span class="hljs-attr">testId</span>: testId }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err, testTransactionsModel</span>) </span>{
+				<span class="hljs-keyword">if</span> (testTransactionsModel &amp;&amp; testTransactionsModel != <span class="hljs-literal">undefined</span>) {
+					test.transactions = testTransactionsModel.transactions;
+				}
+				callback(test);
+			});
+		} <span class="hljs-keyword">else</span> {
+			callback(test);
+		}
+	});
+}
+
+exports.insert = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testRequestDTO, callback</span>) </span>{
+	<span class="hljs-keyword">var</span> test = <span class="hljs-keyword">new</span> Test(testRequestDTO);
+	test.save(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{
+		<span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> handleError(error);
+		callback(test);
+	});
+}
+
+exports.update = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testRequestDTO, callback</span>) </span>{
+	Test.findByIdAndUpdate(
+		testRequestDTO.id,
+		{
+			<span class="hljs-attr">$set</span>:
+			{
+				<span class="hljs-attr">owner</span>: testRequestDTO.owner,
+				<span class="hljs-attr">name</span>: testRequestDTO.name,
+				<span class="hljs-attr">startDate</span>: testRequestDTO.startDate,
+				<span class="hljs-attr">endDate</span>: testRequestDTO.endDate,
+				<span class="hljs-attr">samplePercent</span>: testRequestDTO.samplePercent,
+				<span class="hljs-attr">transactionRequired</span>: testRequestDTO.transactionRequired
+			},
+		},
+		{ <span class="hljs-attr">new</span>: <span class="hljs-literal">true</span> },
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, testUpdated</span>) </span>{
+			<span class="hljs-keyword">if</span> (error) handleError(error);
+			callback(testUpdated);
+		}
+	);
+}
+
+exports.reset = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testId, callback</span>) </span>{
+	findById = <span class="hljs-keyword">this</span>.findById;
+	Test.findById(testId, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, test</span>) </span>{
+		<span class="hljs-keyword">if</span> (test) {
+			test.requests = <span class="hljs-number">0</span>;
+			test.candidates.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">newCandidate</span>) </span>{
+				newCandidate.converted = <span class="hljs-number">0</span>;
+				newCandidate.requests = <span class="hljs-number">0</span>;
+				newCandidate.convertionRate = <span class="hljs-number">0</span>;
+			});
+			test.save(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, test</span>) </span>{
+				TestTransactionsModel.findOneAndUpdate(
+					{ <span class="hljs-attr">testId</span>: testId },
+					{ <span class="hljs-attr">$set</span>: { <span class="hljs-attr">transactions</span>: [] } },
+					<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err, numberAffected, raw</span>) </span>{
+						<span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> Logger.error(error);
+						findById(test.id, callback);
+					}
+				);
+			});
+		} <span class="hljs-keyword">else</span> {
+			callback(<span class="hljs-literal">null</span>);
+		}
+	});
+}
+
+exports.delete = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testId</span>) </span>{
+	Test.find({ <span class="hljs-attr">_id</span>: testId }).remove().exec();
+}
+
+exports.execute = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testId, transactionRef, callback</span>) </span>{
+	Test.findById(testId, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err, test</span>) </span>{
+		<span class="hljs-keyword">if</span> (test) {
+			<span class="hljs-keyword">if</span> (test.transactionRequired) {
+				<span class="hljs-keyword">if</span> (transactionRef == <span class="hljs-literal">undefined</span>) {
+					callback(test,
+						<span class="hljs-literal">null</span>,
+						transactionRef,
+						<span class="hljs-keyword">new</span> InvalidParametersException(<span class="hljs-string">"TransactionRef as query param is required."</span>));
+				} <span class="hljs-keyword">else</span> {
+					TestTransactionsModel.findOne(
+						{ <span class="hljs-string">'testId'</span>: testId, <span class="hljs-string">'transactions.ref'</span>: transactionRef },
+						<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, testTransactionsModel</span>) </span>{
+							<span class="hljs-keyword">if</span> (testTransactionsModel &amp;&amp; testTransactionsModel != <span class="hljs-literal">undefined</span>) {
+								callback(
+									test,
+									<span class="hljs-literal">null</span>,
+									transactionRef,
+									<span class="hljs-keyword">new</span> InvalidParametersException(<span class="hljs-string">"TransactionRef has been used."</span>));
+							} <span class="hljs-keyword">else</span> {
+								processExecute(test, transactionRef, callback);
+							}
+						});
+				}
+			} <span class="hljs-keyword">else</span> {
+				processExecute(test, transactionRef, callback);
+			}
+		} <span class="hljs-keyword">else</span> {
+			callback();
+		}
+	});
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processExecute</span>(<span class="hljs-params">test, transactionRef, callback</span>) </span>{
+	<span class="hljs-keyword">var</span> selectedCandidate = <span class="hljs-literal">null</span>;
+	<span class="hljs-keyword">try</span> {
+		selectedCandidate = selectCandidate(test);
+		incrementTest(test, selectedCandidate, transactionRef);
+	} <span class="hljs-keyword">finally</span> {
+		callback(test, selectedCandidate, transactionRef, <span class="hljs-literal">null</span>);
+	}
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">selectCandidate</span>(<span class="hljs-params">test</span>) </span>{
+	<span class="hljs-keyword">var</span> selectedCandidate = <span class="hljs-literal">null</span>;
+	<span class="hljs-keyword">var</span> sumTestedRequests = <span class="hljs-number">0</span>;
+	<span class="hljs-keyword">if</span> (test.active
+		&amp;&amp; (!test.startDate || <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>() &gt;= <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(test.startDate))
+		&amp;&amp; (!test.endDate || now &lt;= <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(test.endDate))) {
+		test.candidates.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">newCandidate</span>) </span>{
+			sumTestedRequests += newCandidate.requests;
+			<span class="hljs-keyword">if</span> (selectedCandidate === <span class="hljs-literal">null</span> || newCandidate.requests &lt; selectedCandidate.requests) {
+				selectedCandidate = newCandidate;
+			}
+		});
+		<span class="hljs-keyword">var</span> percentSelectedRequests = (sumTestedRequests / test.requests);
+		percentSelectedRequests = <span class="hljs-built_in">isNaN</span>(percentSelectedRequests) ? <span class="hljs-number">0</span> : percentSelectedRequests;
+		<span class="hljs-keyword">var</span> candidateRef = <span class="hljs-literal">null</span>;
+		<span class="hljs-keyword">if</span> (percentSelectedRequests &gt; test.samplePercent) {
+			selectedCandidate = <span class="hljs-literal">null</span>;
+		}
+	}
+	<span class="hljs-keyword">return</span> selectedCandidate;
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">incrementTest</span>(<span class="hljs-params">test, candidate, transactionRef</span>) </span>{
+	<span class="hljs-keyword">var</span> resumeCandidate = <span class="hljs-literal">null</span>;
+	test.update(
+		{ <span class="hljs-attr">$inc</span>: { <span class="hljs-attr">requests</span>: <span class="hljs-number">1</span> } },
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, rawResponse</span>) </span>{
+			<span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> Logger.error(error);
+		}
+	);
+	<span class="hljs-keyword">if</span> (candidate) {
+		resumeCandidate = {
+			<span class="hljs-attr">id</span>: candidate.id,
+			<span class="hljs-attr">name</span>: candidate.name,
+			<span class="hljs-attr">payLoad</span>: candidate.payLoad
+		};
+		Test.update(
+			{ <span class="hljs-string">"candidates._id"</span>: candidate.id },
+			{ <span class="hljs-attr">$inc</span>: { <span class="hljs-string">"candidates.$.requests"</span>: <span class="hljs-number">1</span> } },
+			<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, rawResponse</span>) </span>{
+				<span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> Logger.error(error);
+			}
+		);
+	}
+	<span class="hljs-keyword">var</span> transaction = test.transactionRequired ? <span class="hljs-keyword">new</span> TransactionModel({
+		<span class="hljs-attr">ref</span>: transactionRef,
+		<span class="hljs-attr">candidate</span>: resumeCandidate,
+		<span class="hljs-attr">executeDate</span>: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>(),
+		<span class="hljs-attr">converted</span>: <span class="hljs-literal">false</span>
+	}) : <span class="hljs-keyword">new</span> TransactionModel({
+		<span class="hljs-attr">candidate</span>: resumeCandidate,
+		<span class="hljs-attr">executeDate</span>: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>()
+	});
+
+	TestTransactionsModel.findOneAndUpdate(
+		{ <span class="hljs-attr">testId</span>: test.id },
+		{ <span class="hljs-attr">$addToSet</span>: { <span class="hljs-attr">transactions</span>: transaction } },
+		{ <span class="hljs-attr">upsert</span>: <span class="hljs-literal">true</span> },
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, numberAffected, raw</span>) </span>{
+			<span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">return</span> Logger.error(error);
+		}
+	);
+}
+
+exports.convert = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">testId, transactionRef, callback</span>) </span>{
+	TestTransactionsModel.findOne(
+		{ <span class="hljs-attr">testId</span>: testId, <span class="hljs-string">'transactions.ref'</span>: transactionRef })
+		.select({ <span class="hljs-attr">transactions</span>: { <span class="hljs-attr">$elemMatch</span>: { <span class="hljs-attr">ref</span>: transactionRef } } })
+		.exec(
+		<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">e1, testTransactionsModel</span>) </span>{
+			<span class="hljs-keyword">if</span> (e1) {
+				callback(e1);
+			} <span class="hljs-keyword">else</span> {
+				<span class="hljs-keyword">if</span> (testTransactionsModel === <span class="hljs-literal">null</span>
+					|| testTransactionsModel.transactions === <span class="hljs-literal">null</span>
+					|| testTransactionsModel.transactions.lenght == <span class="hljs-number">0</span>) {
+					callback(<span class="hljs-keyword">new</span> InvalidParametersException(<span class="hljs-string">"TransactionRef was not found."</span>));
+				} <span class="hljs-keyword">else</span> {
+					<span class="hljs-keyword">var</span> transaction = testTransactionsModel.transactions[<span class="hljs-number">0</span>];
+					<span class="hljs-keyword">if</span> (transaction.candidate === <span class="hljs-literal">null</span>) {
+						callback(<span class="hljs-keyword">new</span> InvalidParametersException(<span class="hljs-string">"Transaction cannot be converted because it has not candidate."</span>));
+					} <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(transaction.converted){
+						callback(<span class="hljs-keyword">new</span> InvalidParametersException(<span class="hljs-string">"Transaction has been converted."</span>));
+					} <span class="hljs-keyword">else</span> {
+						candidateService.convertCandidate(transaction.candidate.id, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">e2, candidate</span>) </span>{
+							<span class="hljs-keyword">if</span> (e2) {
+								callback(e2);
+							}
+							TestTransactionsModel.findOneAndUpdate(
+								{
+									<span class="hljs-attr">testId</span>: testId, <span class="hljs-string">'transactions.ref'</span>: transactionRef
+								},
+								{
+									<span class="hljs-attr">$set</span>:
+									{ <span class="hljs-string">'transactions.$.converted'</span>: <span class="hljs-literal">true</span>, <span class="hljs-string">'transactions.$.convertDate'</span>: <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>() }
+								}, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">e3, transaction</span>) </span>{
+									<span class="hljs-keyword">if</span> (e3) {
+										callback(e3);
+									}
+									callback(e3, transaction);
+								}
+							);
+						});
+					}
+				}
+			}
+		});
+}
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

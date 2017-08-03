@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>main.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="doc-style.css" />
+  <script src="doc-filelist.js"></script>
+  <script>
+    var relativeDir = "";
+    var thisFile = "main.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>main.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-meta">'use strict'</span>;
+
+<span class="hljs-keyword">var</span> server = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./config/initializers/server'</span>);
+<span class="hljs-keyword">var</span> db = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./config/initializers/database'</span>);
+<span class="hljs-keyword">var</span> nconf = <span class="hljs-built_in">require</span>(<span class="hljs-string">'nconf'</span>);
+<span class="hljs-keyword">var</span> <span class="hljs-keyword">async</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">'async'</span>);
+<span class="hljs-keyword">var</span> logger = <span class="hljs-built_in">require</span>(<span class="hljs-string">'winston'</span>);
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2"></a>
+</div>
+<p>Set up configs</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">nconf.use(<span class="hljs-string">'memory'</span>);
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3"></a>
+</div>
+<p>First load command line arguments</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">nconf.argv();
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4"></a>
+</div>
+<p>Load environment variables</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript">nconf.env();
+
+<span class="hljs-keyword">const</span> NODE_ENV = nconf.get(<span class="hljs-string">'NODE_ENV'</span>);
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5"></a>
+</div>
+<p>Load config file for the environment</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-built_in">require</span>(<span class="hljs-string">'./config/environments/'</span> + NODE_ENV);
+
+logger.info(<span class="hljs-string">'[ABTest] Starting server initialization on '</span> + NODE_ENV + <span class="hljs-string">' environment'</span>);
+
+
+</pre>
+        </td>
+      </tr>
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6"></a>
+</div>
+<p>Initialize Modules</p>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">async</span>.series([
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">initializeDBConnection</span>(<span class="hljs-params">callback</span>) </span>{
+        db(callback);
+    },
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">startServer</span>(<span class="hljs-params">callback</span>) </span>{
+        server.start(callback);
+    }
+], <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">err</span>) </span>{
+    <span class="hljs-keyword">if</span> (err) {
+        logger.error(<span class="hljs-string">'[ABTest] initialization failed'</span>, err);
+    } <span class="hljs-keyword">else</span> {
+        logger.info(<span class="hljs-string">'[ABTest] initialized SUCCESSFULLY'</span>);
+    }
+});
+
+<span class="hljs-built_in">module</span>.exports = {
+    <span class="hljs-attr">app</span>: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">return</span> server.app();
+    }
+};
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>

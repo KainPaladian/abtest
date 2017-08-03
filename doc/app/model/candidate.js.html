@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>candidate.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../";
+    var thisFile = "app/model/candidate.js";
+    var defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container">
+    <div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+    
+      <tr>
+        <td class="docs">
+          <h1>candidate.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+    
+    
+      <tr>
+        <td class="docs">
+          <div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1"></a>
+</div>
+
+        </td>
+        <td class="code highlight">
+          <pre class="javascript"><span class="hljs-keyword">var</span> mongoose = <span class="hljs-built_in">require</span>(<span class="hljs-string">'mongoose'</span>);
+<span class="hljs-keyword">var</span> Schema = mongoose.Schema;
+
+<span class="hljs-keyword">var</span> candidateSchema = <span class="hljs-keyword">new</span> Schema({
+  <span class="hljs-attr">name</span>: { <span class="hljs-attr">type</span>: <span class="hljs-built_in">String</span>, <span class="hljs-attr">trim</span>: <span class="hljs-literal">true</span> },
+  <span class="hljs-attr">converted</span>: { <span class="hljs-attr">type</span>: <span class="hljs-built_in">Number</span>, <span class="hljs-attr">default</span>: <span class="hljs-number">0</span> },
+  <span class="hljs-attr">requests</span>: { <span class="hljs-attr">type</span>: <span class="hljs-built_in">Number</span>, <span class="hljs-attr">default</span>: <span class="hljs-number">0</span> },
+  <span class="hljs-attr">payLoad</span>: { <span class="hljs-attr">type</span>: Schema.Types.Mixed, <span class="hljs-attr">default</span>: <span class="hljs-number">0</span> }
+});
+
+candidateSchema.virtual(<span class="hljs-string">'convertionRate'</span>).get(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.requests == <span class="hljs-number">0</span> ? <span class="hljs-number">0</span> : <span class="hljs-keyword">this</span>.converted / <span class="hljs-keyword">this</span>.requests;
+});
+
+<span class="hljs-keyword">var</span> Candidate = mongoose.model(<span class="hljs-string">'Candidate'</span>, candidateSchema);
+
+<span class="hljs-built_in">module</span>.exports = Candidate;
+
+</pre>
+        </td>
+      </tr>
+    
+  </tbody>
+</table>
+
+  </div>
+</body>
+</html>
