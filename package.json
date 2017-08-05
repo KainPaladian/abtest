@@ -6,9 +6,9 @@
     "scripts": {
         "test": "cross-env NODE_ENV=development NODE_PORT=3000 mocha",
         "test-staging": "cross-env NODE_ENV=staging NODE_PORT=3000 mocha",
-        "dev": "cross-env NODE_ENV=development NODE_PORT=3000 nodemon main.js",
-        "staging": "cross-env NODE_ENV=staging NODE_PORT=3000 forever start ./config/forever/staging.json",
-        "build": "cross-env NODE_ENV=production NODE_PORT=3000 forever start ./config/forever/production.json"
+        "start-dev": "cross-env NODE_ENV=development NODE_PORT=3000 nodemon main.js",
+        "start-staging": "cross-env NODE_ENV=staging NODE_PORT=3000 forever start ./config/forever/staging.json",
+        "start": "cross-env NODE_ENV=production NODE_PORT=3000 forever start ./config/forever/production.json"
     },
     "keywords": [
         "AB",
